@@ -15,8 +15,10 @@ class TravelLocationViewController: UIViewController {
     @IBOutlet weak var mapView: MKMapView!
     
     var dataController:DataController!
-    var repository: VRTRepository!
-    var annotations: [MKPointAnnotation] = []
+    var fetchedResultsController: NSFetchedResultsController<Pin>!
+    var pin: Pin!
+    
+    var fetchedPhotoResultController: NSFetchedResultsController<Photo>!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -24,24 +26,8 @@ class TravelLocationViewController: UIViewController {
     }
     
     private func initView() {
-        configureRepository()
         configureMap()
-        fetchPins()
-    }
-    
-    private func configureRepository() {
-        repository = VRTRepository(dataController: dataController)
-    }
-    
-    private func fetchPins() {
-        repository.getPins { pins, error in
-            if let error = error {
-                self.showErrorAlert(message: error.localizedDescription)
-                return
-            }
-            
-            print("Total PIN: \(pins.count)")
-        }
+        fetchPins(completion: handleFetchedPin(success:error:))
     }
     
     private func configureMap() {
@@ -63,27 +49,55 @@ class TravelLocationViewController: UIViewController {
         let annotation = MKPointAnnotation()
         annotation.coordinate = coordinate
         let region = MKCoordinateRegion(center: coordinate
-                                        , latitudinalMeters: 5000, longitudinalMeters: 5000)
+                                        , latitudinalMeters: 1000, longitudinalMeters: 1000)
         let adjustRegion = mapView.regionThatFits(region)
         mapView.addAnnotation(annotation)
         mapView.setCenter(coordinate, animated: true)
         mapView.setRegion(adjustRegion, animated: true)
+        savePin(coordinate: coordinate)
     }
     
-    private func handleLocations(locations: [Pin], error:  Error?) {
-        if let error = error {
-            showErrorAlert(message: error.localizedDescription)
-            return
+    
+    // MARK: - Handles
+    private func handleFetchedPin(success: Bool, error: Error?) {
+        if success {
+            print("Total PIN: \(fetchedResultsController.fetchedObjects?.count ?? 0)")
+        } else {
+            self.showErrorAlert(message: error?.localizedDescription ?? "")
         }
-        
-        mapView.removeAnnotations(annotations)
-        annotations.removeAll()
-        
-        for location in locations {
-            let annotation = MKPointAnnotation()
-            annotation.coordinate = CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
-            annotations.append(annotation)
-            mapView.addAnnotation(annotation)
+    }
+    
+    // MARK: - Core Data
+    func fetchPins(completion: @escaping (Bool, Error?) -> Void) {
+        let fetchRequest:NSFetchRequest<Pin> = Pin.fetchRequest()
+        let sortDescriptor = NSSortDescriptor(key: "latitude", ascending: false)
+        fetchRequest.sortDescriptors = [sortDescriptor]
+        fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "pins")
+        fetchedResultsController.delegate = self
+        do {
+            try fetchedResultsController.performFetch()
+            completion(true, nil)
+        } catch {
+            completion(false, error)
+        }
+    }
+    
+    func savePin(coordinate: CLLocationCoordinate2D) {
+        pin = Pin(context: dataController.viewContext)
+        pin.longitude = coordinate.longitude
+        pin.latitude = coordinate.latitude
+        pin.createdAt = Date()
+        try? dataController.viewContext.save()
+    }
+    
+    
+    
+    // MARK: - Navigation
+    // In a storyboard-based application, you will often want to do a little preparation before navigation
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "showAlbum" {
+            let destination = segue.destination as! AlbumViewController
+            destination.pin = pin
         }
     }
 }
@@ -97,8 +111,6 @@ extension TravelLocationViewController: MKMapViewDelegate {
             annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: "Annotation")
             annotationView?.canShowCallout = true
             
-            let button = UIButton(type: .detailDisclosure)
-            annotationView?.rightCalloutAccessoryView = button
         } else {
             annotationView!.annotation = annotation
         }
@@ -108,7 +120,20 @@ extension TravelLocationViewController: MKMapViewDelegate {
     
     
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        self.performSegue(withIdentifier: "showAlbum", sender: nil)
         
+//        repository.getPhotosByLocation(pin: pin) { response, error in
+//            if let error = error {
+//                self.showErrorAlert(message: error.localizedDescription)
+//                return
+//            }
+//
+//            self.performSegue(withIdentifier: "showAlbum", sender: nil)
+//        }
     }
+}
+
+extension TravelLocationViewController: NSFetchedResultsControllerDelegate {
+    
 }
 
