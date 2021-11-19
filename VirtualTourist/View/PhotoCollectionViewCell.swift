@@ -9,12 +9,21 @@ import UIKit
 
 class PhotoCollectionViewCell: UICollectionViewCell {
     
+    @IBOutlet weak var photoImage: UIImageView!
+    
     static let cellID = "PhotoCollectionViewCell"
 
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code
     }
+    
+    func configureCell(data: Data) {
+        photoImage.image = UIImage(data: data)
+        photoImage.contentMode = .scaleAspectFit
+    }
+    
+    
     
     class func getNib() -> UINib? {
         return UINib(nibName: cellID, bundle: nil)

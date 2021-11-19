@@ -56,10 +56,10 @@
             </objects>
             <point key="canvasLocation" x="28" y="-126"/>
         </scene>
-        <!--Album View Controller-->
+        <!--Photo Album View Controller-->
         <scene sceneID="uTx-h6-LOs">
             <objects>
-                <viewController id="iIm-If-lzo" customClass="AlbumViewController" customModule="VirtualTourist" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="iIm-If-lzo" customClass="PhotoAlbumViewController" customModule="VirtualTourist" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="5PZ-ov-u3i">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>

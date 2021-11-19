@@ -17,6 +17,7 @@ class TravelLocationViewController: UIViewController {
     var dataController:DataController!
     var fetchedResultsController: NSFetchedResultsController<Pin>!
     var pin: Pin!
+    var pins: [Pin] = []
     
     var fetchedPhotoResultController: NSFetchedResultsController<Photo>!
     
@@ -57,11 +58,20 @@ class TravelLocationViewController: UIViewController {
         savePin(coordinate: coordinate)
     }
     
+    private func showPins() {
+        //configureActivityIndicator(enabled: false)
+        for pin in fetchedResultsController.fetchedObjects ?? [] {
+            let annotation = MKPointAnnotation()
+            annotation.coordinate = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
+            mapView.addAnnotation(annotation)
+        }
+    }
+    
     
     // MARK: - Handles
     private func handleFetchedPin(success: Bool, error: Error?) {
         if success {
-            print("Total PIN: \(fetchedResultsController.fetchedObjects?.count ?? 0)")
+            showPins()
         } else {
             self.showErrorAlert(message: error?.localizedDescription ?? "")
         }
@@ -82,11 +92,12 @@ class TravelLocationViewController: UIViewController {
         }
     }
     
+    
+    
     func savePin(coordinate: CLLocationCoordinate2D) {
         pin = Pin(context: dataController.viewContext)
         pin.longitude = coordinate.longitude
         pin.latitude = coordinate.latitude
-        pin.createdAt = Date()
         try? dataController.viewContext.save()
     }
     
@@ -96,8 +107,9 @@ class TravelLocationViewController: UIViewController {
     // In a storyboard-based application, you will often want to do a little preparation before navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "showAlbum" {
-            let destination = segue.destination as! AlbumViewController
+            let destination = segue.destination as! PhotoAlbumViewController
             destination.pin = pin
+            destination.dataController = dataController
         }
     }
 }
@@ -120,16 +132,10 @@ extension TravelLocationViewController: MKMapViewDelegate {
     
     
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        self.performSegue(withIdentifier: "showAlbum", sender: nil)
-        
-//        repository.getPhotosByLocation(pin: pin) { response, error in
-//            if let error = error {
-//                self.showErrorAlert(message: error.localizedDescription)
-//                return
-//            }
-//
-//            self.performSegue(withIdentifier: "showAlbum", sender: nil)
-//        }
+        if let pin = fetchedResultsController.fetchedObjects?.first(where: { $0.latitude == view.annotation?.coordinate.latitude && view.annotation?.coordinate.longitude == $0.longitude}) {
+            self.pin = pin
+            self.performSegue(withIdentifier: "showAlbum", sender: nil)
+        }
     }
 }
 

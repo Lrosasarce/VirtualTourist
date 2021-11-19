@@ -119,14 +119,14 @@ class VRTClient {
         task.resume()
     }
     
-    class func fetchPhotosByCoordinate(latitude: Double, longitude: Double, completion: @escaping([PhotoEntity], Error?) -> Void) {
+    class func fetchPhotosByCoordinate(latitude: Double, longitude: Double, completion: @escaping(PhotoResult?, Error?) -> Void) {
         
         VRTClient.shared.taskForGETRequest(url: VRTClient.Endpoints.photosByLocation(latitude: latitude, longitude: longitude).url, responseType: PhotoResponse.self) { response, error in
             if let error = error {
-                completion([], error)
+                completion(nil, error)
                 return
             }
-            completion(response?.photos.photo ?? [], nil)
+            completion(response?.photos, nil)
         }
         
     }
