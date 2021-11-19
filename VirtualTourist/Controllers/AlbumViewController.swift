@@ -48,25 +48,26 @@ class AlbumViewController: UIViewController {
     }
     
     private func configureCollectionView() {
+        let flowLayout = UICollectionViewFlowLayout()
+        flowLayout.minimumInteritemSpacing = 2
+        flowLayout.minimumLineSpacing = 2
         
+        let size = collectionView.frame.width/3 - 10
+        flowLayout.itemSize = CGSize(width: size, height: size)
+        
+        collectionView.dataSource = self
+        collectionView.collectionViewLayout = flowLayout
+        collectionView.register(PhotoCollectionViewCell.getNib(), forCellWithReuseIdentifier: PhotoCollectionViewCell.cellID)
+        collectionView.layoutIfNeeded()
     }
     
 
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destination.
-        // Pass the selected object to the new view controller.
-    }
-    */
 
 }
 
 extension AlbumViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 0
+        return 5
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
