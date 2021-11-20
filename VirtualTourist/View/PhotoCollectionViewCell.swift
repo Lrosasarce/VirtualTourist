@@ -18,9 +18,11 @@ class PhotoCollectionViewCell: UICollectionViewCell {
         // Initialization code
     }
     
-    func configureCell(data: Data) {
-        photoImage.image = UIImage(data: data)
-        photoImage.contentMode = .scaleAspectFit
+    func configureCell(data: Data?) {
+        if let data = data {
+            photoImage.image = UIImage(data: data)
+            photoImage.contentMode = .center
+        }
     }
     
     

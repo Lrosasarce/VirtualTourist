@@ -20,15 +20,15 @@ class VRTClient {
         static let jsonFormat = "&format=json&nojsoncallback=1"
         
         case photosByLocation(latitude: Double, longitude: Double)
-        case photoResoruce(server: String, id: String, size: String)
+        case photoResoruce(server: String, id: String, size: String, secret: String)
         
         var stringValue: String {
             switch self {
             case .photosByLocation(let latitude, let longitude):
                 return Endpoints.base + Endpoints.apiKeyParam + Endpoints.jsonFormat + "&lat=\(latitude)&lon=\(longitude)&method=flickr.photos.search&per_page=10"
                 
-            case .photoResoruce(let server, let id, let size):
-                return "https://live.staticflickr.com/\(server)/\(id)_\(VRTClient.secret)_\(size).jpg"
+            case .photoResoruce(let server, let id, let size, let secret):
+                return "https://live.staticflickr.com/\(server)/\(id)_\(secret)_\(size).jpg"
             }
         }
         
@@ -132,9 +132,10 @@ class VRTClient {
     }
     
     
-    class func downloadPhotoImage(server: String, id: String, size: String, completion: @escaping (Data?, Error?) -> Void) {
-        let task = URLSession.shared.dataTask(with: Endpoints.photoResoruce(server: server, id: id, size: size).url) { data, response, error in
+    class func downloadPhotoImage(server: String, id: String, size: String, secret: String, completion: @escaping (Data?, Error?) -> Void) {
+        let task = URLSession.shared.dataTask(with: Endpoints.photoResoruce(server: server, id: id, size: size, secret: secret).url) { data, response, error in
             DispatchQueue.main.async {
+                print("ImageUrl: \(response?.url?.absoluteString ?? "")")
                 completion(data, error)
             }
         }

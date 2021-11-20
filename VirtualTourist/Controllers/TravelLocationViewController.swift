@@ -132,6 +132,7 @@ extension TravelLocationViewController: MKMapViewDelegate {
     
     
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
+        print(#function)
         if let pin = fetchedResultsController.fetchedObjects?.first(where: { $0.latitude == view.annotation?.coordinate.latitude && view.annotation?.coordinate.longitude == $0.longitude}) {
             self.pin = pin
             self.performSegue(withIdentifier: "showAlbum", sender: nil)

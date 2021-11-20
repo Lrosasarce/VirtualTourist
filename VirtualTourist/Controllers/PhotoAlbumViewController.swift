@@ -16,8 +16,8 @@ class PhotoAlbumViewController: UIViewController {
     
     var pin: Pin!
     var dataController: DataController!
-    var remoteServiceCalled: Bool = false
-    var fetchedResultsController: NSFetchedResultsController<Photo>!
+    var callRemoteService: Bool = false
+    var fetchedResultsController: NSFetchedResultsController<Photo>?
     
 
     override func viewDidLoad() {
@@ -28,9 +28,11 @@ class PhotoAlbumViewController: UIViewController {
     private func initView() {
         addScreenValues()
         configureMapView()
+        configureCollectionView()
         
         fetchPhotosByPin(pin)
-        configureCollectionView()
+        handleFetchedResult()
+        
     }
     
     private func addScreenValues() {
@@ -73,26 +75,26 @@ class PhotoAlbumViewController: UIViewController {
         fetchRequest.sortDescriptors = [sortDescriptor]
         
         fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: dataController.viewContext, sectionNameKeyPath: nil, cacheName: "\(pin)-photos")
-        fetchedResultsController.delegate = self
+        fetchedResultsController?.delegate = self
 
         do {
-            try fetchedResultsController.performFetch()
+            try fetchedResultsController?.performFetch()
+            callRemoteService = fetchedResultsController?.fetchedObjects?.isEmpty ?? true
         } catch {
             print("Error: \(error.localizedDescription)")
         }
     }
     
     private func handleFetchedResult() {
-        if remoteServiceCalled {
+        if !callRemoteService {
             collectionView.reloadData()
-        
         } else {
-            
+            fetchRemotePhotosByPin(pin)
         }
     }
     
     private func fetchRemotePhotosByPin(_ pin: Pin) {
-        remoteServiceCalled = true
+        callRemoteService = false
         VRTClient.fetchPhotosByCoordinate(latitude: pin.latitude, longitude: pin.longitude, completion: handleRemotePhoto(photoResult:error:))
     }
     
@@ -103,11 +105,11 @@ class PhotoAlbumViewController: UIViewController {
         }
         
         for photo in photoResult!.photo {
-            VRTClient.downloadPhotoImage(server: photo.server, id: photo.id, size: "w") { data, error in
+            VRTClient.downloadPhotoImage(server: photo.server, id: photo.id, size: "w", secret: photo.secret) { data, error in
                 self.savePhoto(response: photo, data: data!)
             }
         }
-        collectionView.reloadData()
+        
     }
     
     // MARK: - Core Data Methods
@@ -115,7 +117,7 @@ class PhotoAlbumViewController: UIViewController {
         let photo = Photo(context: dataController.viewContext)
         photo.id = response.id
         photo.image = data
-        photo.createdAt = Date()
+        photo.pin = pin
         try? dataController.viewContext.save()
     }
     
@@ -124,18 +126,26 @@ class PhotoAlbumViewController: UIViewController {
 
 extension PhotoAlbumViewController: UICollectionViewDataSource {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return fetchedResultsController.sections?[0].numberOfObjects ?? 0
+        return fetchedResultsController?.sections?[0].numberOfObjects ?? 0
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: PhotoCollectionViewCell.cellID, for: indexPath) as? PhotoCollectionViewCell else {
             return PhotoCollectionViewCell()
         }
+        let data = fetchedResultsController?.object(at: indexPath).image
+        cell.configureCell(data: data)
         return cell
     }
 }
 
 
 extension PhotoAlbumViewController: NSFetchedResultsControllerDelegate {
+    func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        collectionView.reloadData()
+    }
     
+    func controllerDidChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
+        collectionView.reloadData()
+    }
 }
