@@ -13,6 +13,7 @@ class PhotoAlbumViewController: UIViewController {
     
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var collectionView: UICollectionView!
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     var pin: Pin!
     var dataController: DataController!
@@ -95,7 +96,17 @@ class PhotoAlbumViewController: UIViewController {
     
     private func fetchRemotePhotosByPin(_ pin: Pin) {
         callRemoteService = false
+        configureActivityIndicator(enabled: true)
         VRTClient.fetchPhotosByCoordinate(latitude: pin.latitude, longitude: pin.longitude, completion: handleRemotePhoto(photoResult:error:))
+    }
+    
+    private func configureActivityIndicator(enabled: Bool) {
+        mapView.isUserInteractionEnabled = !enabled
+        if enabled {
+            activityIndicator.startAnimating()
+        } else {
+            activityIndicator.stopAnimating()
+        }
     }
     
     private func handleRemotePhoto(photoResult: PhotoResult?, error: Error?) {
@@ -109,6 +120,7 @@ class PhotoAlbumViewController: UIViewController {
                 self.savePhoto(response: photo, data: data!)
             }
         }
+        configureActivityIndicator(enabled: false)
         
     }
     

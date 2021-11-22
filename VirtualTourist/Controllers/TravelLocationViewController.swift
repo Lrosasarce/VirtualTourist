@@ -99,6 +99,7 @@ class TravelLocationViewController: UIViewController {
         pin.longitude = coordinate.longitude
         pin.latitude = coordinate.latitude
         try? dataController.viewContext.save()
+        fetchPins(completion: handleFetchedPin(success:error:))
     }
     
     
@@ -121,8 +122,6 @@ extension TravelLocationViewController: MKMapViewDelegate {
         var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: "Annotation")
         if annotationView == nil {
             annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: "Annotation")
-            annotationView?.canShowCallout = true
-            
         } else {
             annotationView!.annotation = annotation
         }
@@ -132,7 +131,6 @@ extension TravelLocationViewController: MKMapViewDelegate {
     
     
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
-        print(#function)
         if let pin = fetchedResultsController.fetchedObjects?.first(where: { $0.latitude == view.annotation?.coordinate.latitude && view.annotation?.coordinate.longitude == $0.longitude}) {
             self.pin = pin
             self.performSegue(withIdentifier: "showAlbum", sender: nil)

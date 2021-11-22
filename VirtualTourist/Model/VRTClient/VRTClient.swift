@@ -135,7 +135,6 @@ class VRTClient {
     class func downloadPhotoImage(server: String, id: String, size: String, secret: String, completion: @escaping (Data?, Error?) -> Void) {
         let task = URLSession.shared.dataTask(with: Endpoints.photoResoruce(server: server, id: id, size: size, secret: secret).url) { data, response, error in
             DispatchQueue.main.async {
-                print("ImageUrl: \(response?.url?.absoluteString ?? "")")
                 completion(data, error)
             }
         }
