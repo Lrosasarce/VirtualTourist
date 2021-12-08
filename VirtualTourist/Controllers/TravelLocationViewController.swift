@@ -11,9 +11,10 @@ import CoreData
 
 class TravelLocationViewController: UIViewController {
     
-    
+    // MARK: - IBOutlets
     @IBOutlet weak var mapView: MKMapView!
     
+    // MARK: - Properties
     var dataController:DataController!
     var fetchedResultsController: NSFetchedResultsController<Pin>!
     var pin: Pin!
@@ -21,21 +22,37 @@ class TravelLocationViewController: UIViewController {
     
     var fetchedPhotoResultController: NSFetchedResultsController<Photo>!
     
+    
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         initView()
     }
     
+    // MARK: - Private methods
     private func initView() {
         configureMap()
         fetchPins(completion: handleFetchedPin(success:error:))
+        showLastLocation()
     }
     
     private func configureMap() {
         mapView.delegate = self
         
+        // Detect when user touches the map
         let gesture = UILongPressGestureRecognizer(target: self, action: #selector(userDidTapOnMap(gesture:)))
         mapView.addGestureRecognizer(gesture)
+    }
+    
+    private func showLastLocation() {
+        if let pin = fetchedResultsController.fetchedObjects?.last {
+            let location = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
+            let region = MKCoordinateRegion(center: location
+                                            , latitudinalMeters: 500, longitudinalMeters: 1000)
+            let adjustRegion = mapView.regionThatFits(region)
+            mapView.setCenter(location, animated: true)
+            mapView.setRegion(adjustRegion, animated: true)
+        }
     }
     
     @objc private func userDidTapOnMap(gesture: UIGestureRecognizer) {
@@ -59,7 +76,6 @@ class TravelLocationViewController: UIViewController {
     }
     
     private func showPins() {
-        //configureActivityIndicator(enabled: false)
         for pin in fetchedResultsController.fetchedObjects ?? [] {
             let annotation = MKPointAnnotation()
             annotation.coordinate = CLLocationCoordinate2D(latitude: pin.latitude, longitude: pin.longitude)
