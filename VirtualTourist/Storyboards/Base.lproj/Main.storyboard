@@ -98,6 +98,9 @@
                                 </constraints>
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="plain" title="New Collection"/>
+                                <connections>
+                                    <action selector="fetchBtnPressed:" destination="iIm-If-lzo" eventType="touchUpInside" id="sIL-Hx-KNy"/>
+                                </connections>
                             </button>
                             <activityIndicatorView hidden="YES" opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="qVN-eb-d7N">
                                 <rect key="frame" x="197" y="438" width="20" height="20"/>
@@ -124,6 +127,7 @@
                     <connections>
                         <outlet property="activityIndicator" destination="qVN-eb-d7N" id="iGv-6f-cmU"/>
                         <outlet property="collectionView" destination="r0D-wt-0Su" id="q65-Zz-eUC"/>
+                        <outlet property="fetchButton" destination="m1E-og-AIr" id="B3W-qt-DK4"/>
                         <outlet property="mapView" destination="Fqu-yg-nlv" id="Xlu-FJ-X94"/>
                     </connections>
                 </viewController>

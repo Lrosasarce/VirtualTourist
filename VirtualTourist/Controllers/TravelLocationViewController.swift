@@ -92,8 +92,6 @@ class TravelLocationViewController: UIViewController {
         }
     }
     
-    
-    
     func savePin(coordinate: CLLocationCoordinate2D) {
         pin = Pin(context: dataController.viewContext)
         pin.longitude = coordinate.longitude
@@ -101,7 +99,6 @@ class TravelLocationViewController: UIViewController {
         try? dataController.viewContext.save()
         fetchPins(completion: handleFetchedPin(success:error:))
     }
-    
     
     
     // MARK: - Navigation
@@ -116,25 +113,12 @@ class TravelLocationViewController: UIViewController {
 }
 
 extension TravelLocationViewController: MKMapViewDelegate {
-    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
-        guard annotation is MKPointAnnotation else { return nil }
-        
-        var annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: "Annotation")
-        if annotationView == nil {
-            annotationView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: "Annotation")
-        } else {
-            annotationView!.annotation = annotation
-        }
-        
-        return annotationView
-    }
-    
-    
     func mapView(_ mapView: MKMapView, didSelect view: MKAnnotationView) {
         if let pin = fetchedResultsController.fetchedObjects?.first(where: { $0.latitude == view.annotation?.coordinate.latitude && view.annotation?.coordinate.longitude == $0.longitude}) {
             self.pin = pin
             self.performSegue(withIdentifier: "showAlbum", sender: nil)
         }
+        mapView.deselectAnnotation(view.annotation, animated: false)
     }
 }
 

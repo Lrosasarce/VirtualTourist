@@ -19,13 +19,14 @@ class VRTClient {
         static let apiKeyParam = "?api_key=\(VRTClient.apiKey)"
         static let jsonFormat = "&format=json&nojsoncallback=1"
         
-        case photosByLocation(latitude: Double, longitude: Double)
+        case photosByLocation(latitude: Double, longitude: Double, page: Int?)
         case photoResoruce(server: String, id: String, size: String, secret: String)
         
         var stringValue: String {
             switch self {
-            case .photosByLocation(let latitude, let longitude):
-                return Endpoints.base + Endpoints.apiKeyParam + Endpoints.jsonFormat + "&lat=\(latitude)&lon=\(longitude)&method=flickr.photos.search&per_page=10"
+            case .photosByLocation(let latitude, let longitude, let page):
+                let stringPage = page != nil ? "&page=\(page!)" : ""
+                return Endpoints.base + Endpoints.apiKeyParam + Endpoints.jsonFormat + "&lat=\(latitude)&lon=\(longitude)&method=flickr.photos.search&per_page=10"+stringPage
                 
             case .photoResoruce(let server, let id, let size, let secret):
                 return "https://live.staticflickr.com/\(server)/\(id)_\(secret)_\(size).jpg"
@@ -119,9 +120,9 @@ class VRTClient {
         task.resume()
     }
     
-    class func fetchPhotosByCoordinate(latitude: Double, longitude: Double, completion: @escaping(PhotoResult?, Error?) -> Void) {
+    class func fetchPhotosByCoordinate(latitude: Double, longitude: Double, page: Int? = nil, completion: @escaping(PhotoResult?, Error?) -> Void) {
         
-        VRTClient.shared.taskForGETRequest(url: VRTClient.Endpoints.photosByLocation(latitude: latitude, longitude: longitude).url, responseType: PhotoResponse.self) { response, error in
+        VRTClient.shared.taskForGETRequest(url: VRTClient.Endpoints.photosByLocation(latitude: latitude, longitude: longitude, page: page).url, responseType: PhotoResponse.self) { response, error in
             if let error = error {
                 completion(nil, error)
                 return

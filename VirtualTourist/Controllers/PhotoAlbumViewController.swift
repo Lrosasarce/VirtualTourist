@@ -13,6 +13,7 @@ class PhotoAlbumViewController: UIViewController {
     
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var collectionView: UICollectionView!
+    @IBOutlet weak var fetchButton: UIButton!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     var pin: Pin!
@@ -63,6 +64,7 @@ class PhotoAlbumViewController: UIViewController {
         flowLayout.itemSize = CGSize(width: size, height: size)
         
         collectionView.dataSource = self
+        collectionView.delegate = self
         collectionView.collectionViewLayout = flowLayout
         collectionView.register(PhotoCollectionViewCell.getNib(), forCellWithReuseIdentifier: PhotoCollectionViewCell.cellID)
         collectionView.layoutIfNeeded()
@@ -94,10 +96,11 @@ class PhotoAlbumViewController: UIViewController {
         }
     }
     
-    private func fetchRemotePhotosByPin(_ pin: Pin) {
+    private func fetchRemotePhotosByPin(_ pin: Pin, page: Int? = nil) {
         callRemoteService = false
+        fetchButton.isEnabled = false
         configureActivityIndicator(enabled: true)
-        VRTClient.fetchPhotosByCoordinate(latitude: pin.latitude, longitude: pin.longitude, completion: handleRemotePhoto(photoResult:error:))
+        VRTClient.fetchPhotosByCoordinate(latitude: pin.latitude, longitude: pin.longitude, page: page, completion: handleRemotePhoto(photoResult:error:))
     }
     
     private func configureActivityIndicator(enabled: Bool) {
@@ -120,6 +123,7 @@ class PhotoAlbumViewController: UIViewController {
                 self.savePhoto(response: photo, data: data!)
             }
         }
+        fetchButton.isEnabled = !(photoResult?.photo.isEmpty ?? true)
         configureActivityIndicator(enabled: false)
         
     }
@@ -133,7 +137,23 @@ class PhotoAlbumViewController: UIViewController {
         try? dataController.viewContext.save()
     }
     
-
+    func deletePhoto(at indexPath: IndexPath) {
+        let photoToDelete = fetchedResultsController?.object(at: indexPath)
+        dataController.viewContext.delete(photoToDelete!)
+        try? dataController.viewContext.save()
+    }
+    
+    func deleteAlbum() {
+        pin.photos = nil
+        try? dataController.viewContext.save()
+        collectionView.reloadData()
+    }
+    
+    @IBAction func fetchBtnPressed(_ sender: UIButton) {
+        deleteAlbum()
+        let page = Int.random(in: 1..<5)
+        fetchRemotePhotosByPin(pin, page: page)
+    }
 }
 
 extension PhotoAlbumViewController: UICollectionViewDataSource {
@@ -151,8 +171,16 @@ extension PhotoAlbumViewController: UICollectionViewDataSource {
     }
 }
 
+extension PhotoAlbumViewController: UICollectionViewDelegate {
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        deletePhoto(at: indexPath)
+        collectionView.reloadData()
+    }
+}
+
 
 extension PhotoAlbumViewController: NSFetchedResultsControllerDelegate {
+    
     func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         collectionView.reloadData()
     }
