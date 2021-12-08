@@ -11,22 +11,26 @@ import MapKit
 
 class PhotoAlbumViewController: UIViewController {
     
+    // MARK: - IBOUtlets
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var fetchButton: UIButton!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
+    // MARK: - Properties
     var pin: Pin!
     var dataController: DataController!
     var callRemoteService: Bool = false
     var fetchedResultsController: NSFetchedResultsController<Photo>?
     
 
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         initView()
     }
     
+    // MARK: - Private methods
     private func initView() {
         addScreenValues()
         configureMapView()
@@ -39,7 +43,6 @@ class PhotoAlbumViewController: UIViewController {
     
     private func addScreenValues() {
         title = ""
-        navigationController?.navigationBar.backItem?.title = "OK"
     }
     
     private func configureMapView() {

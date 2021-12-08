@@ -124,6 +124,7 @@ class TravelLocationViewController: UIViewController {
             let destination = segue.destination as! PhotoAlbumViewController
             destination.pin = pin
             destination.dataController = dataController
+            navigationItem.backButtonTitle = "OK"
         }
     }
 }
