@@ -12,23 +12,24 @@ class VRTClient {
     static let shared = VRTClient()
     static let apiKey = "31dc2be66bf29d9fa64e32b2b9ad3112"
     static let secret = "87faffa78c97284c"
-    
+    private let logEnabled = true
     
     enum Endpoints {
         static let base = "https://www.flickr.com/services/rest/"
         static let apiKeyParam = "?api_key=\(VRTClient.apiKey)"
         static let jsonFormat = "&format=json&nojsoncallback=1"
         
-        case photosByLocation(latitude: Float, longitude: Float)
-        case photoResoruce(server: String, id: String, size: String)
+        case photosByLocation(latitude: Double, longitude: Double, page: Int?)
+        case photoResoruce(server: String, id: String, size: String, secret: String)
         
         var stringValue: String {
             switch self {
-            case .photosByLocation(let latitude, let longitude):
-                return Endpoints.base + Endpoints.apiKeyParam + Endpoints.jsonFormat + "&lat=\(latitude)&lon=\(longitude)"
+            case .photosByLocation(let latitude, let longitude, let page):
+                let stringPage = page != nil ? "&page=\(page!)" : ""
+                return Endpoints.base + Endpoints.apiKeyParam + Endpoints.jsonFormat + "&lat=\(latitude)&lon=\(longitude)&method=flickr.photos.search&per_page=10"+stringPage
                 
-            case .photoResoruce(let server, let id, let size):
-                return "https://live.staticflickr.com/\(server)/\(id)_\(VRTClient.secret)_\(size).jpg"
+            case .photoResoruce(let server, let id, let size, let secret):
+                return "https://live.staticflickr.com/\(server)/\(id)_\(secret)_\(size).jpg"
             }
         }
         
@@ -37,7 +38,16 @@ class VRTClient {
         }
     }
     
-    class func taskForGETRequest<ResponseType: Decodable>(url: URL, responseType: ResponseType.Type, completion: @escaping (ResponseType?, Error?) -> Void) -> URLSessionDataTask {
+    private func showLog(description: String, data: Data) {
+        if logEnabled {
+            print("============================")
+            let responseString = String(data: data, encoding: .utf8) ?? ""
+            print(description + "\n" + responseString)
+            print("============================")
+        }
+    }
+    
+    @discardableResult func taskForGETRequest<ResponseType: Decodable>(url: URL, responseType: ResponseType.Type, completion: @escaping (ResponseType?, Error?) -> Void) -> URLSessionDataTask {
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             guard let data = data else {
                 DispatchQueue.main.async {
@@ -45,15 +55,18 @@ class VRTClient {
                 }
                 return
             }
+            
+            let newData = data
             let decoder = JSONDecoder()
+            self.showLog(description: "Response: \(url.absoluteString)", data: newData)
             do {
-                let responseObject = try decoder.decode(ResponseType.self, from: data)
+                let responseObject = try decoder.decode(ResponseType.self, from: newData)
                 DispatchQueue.main.async {
                     completion(responseObject, nil)
                 }
             } catch {
                 do {
-                    let errorResponse = try decoder.decode(VRTResponse.self, from: data) as Error
+                    let errorResponse = try decoder.decode(VRTResponse.self, from: newData) as Error
                     DispatchQueue.main.async {
                         completion(nil, errorResponse)
                     }
@@ -69,7 +82,7 @@ class VRTClient {
         return task
     }
     
-    class func taskForPOSTRequest<RequestType: Encodable, ResponseType: Decodable>(url: URL, responseType: ResponseType.Type, body: RequestType, completion: @escaping (ResponseType?, Error?) -> Void) {
+    private func taskForPOSTRequest<RequestType: Encodable, ResponseType: Decodable>(url: URL, responseType: ResponseType.Type, body: RequestType, completion: @escaping (ResponseType?, Error?) -> Void) {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.httpBody = try! JSONEncoder().encode(body)
@@ -81,15 +94,19 @@ class VRTClient {
                 }
                 return
             }
+            
+            let newData = data
+            
+            self.showLog(description: "Response: \(url.absoluteString)",data: newData)
             let decoder = JSONDecoder()
             do {
-                let responseObject = try decoder.decode(ResponseType.self, from: data)
+                let responseObject = try decoder.decode(ResponseType.self, from: newData)
                 DispatchQueue.main.async {
                     completion(responseObject, nil)
                 }
             } catch {
                 do {
-                    let errorResponse = try decoder.decode(VRTResponse.self, from: data) as Error
+                    let errorResponse = try decoder.decode(VRTResponse.self, from: newData) as Error
                     DispatchQueue.main.async {
                         completion(nil, errorResponse)
                     }
@@ -98,6 +115,28 @@ class VRTClient {
                         completion(nil, error)
                     }
                 }
+            }
+        }
+        task.resume()
+    }
+    
+    class func fetchPhotosByCoordinate(latitude: Double, longitude: Double, page: Int? = nil, completion: @escaping(PhotoResult?, Error?) -> Void) {
+        
+        VRTClient.shared.taskForGETRequest(url: VRTClient.Endpoints.photosByLocation(latitude: latitude, longitude: longitude, page: page).url, responseType: PhotoResponse.self) { response, error in
+            if let error = error {
+                completion(nil, error)
+                return
+            }
+            completion(response?.photos, nil)
+        }
+        
+    }
+    
+    
+    class func downloadPhotoImage(server: String, id: String, size: String, secret: String, completion: @escaping (Data?, Error?) -> Void) {
+        let task = URLSession.shared.dataTask(with: Endpoints.photoResoruce(server: server, id: id, size: size, secret: secret).url) { data, response, error in
+            DispatchQueue.main.async {
+                completion(data, error)
             }
         }
         task.resume()
