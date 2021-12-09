@@ -108,22 +108,24 @@ class PhotoAlbumViewController: UIViewController {
     
     private func configureActivityIndicator(enabled: Bool) {
         mapView.isUserInteractionEnabled = !enabled
-        if enabled {
-            activityIndicator.startAnimating()
-        } else {
-            activityIndicator.stopAnimating()
-        }
+        enabled ? activityIndicator.startAnimating() : activityIndicator.stopAnimating()
     }
     
     private func handleRemotePhoto(photoResult: PhotoResult?, error: Error?) {
         if let error = error {
             showErrorAlert(message: error.localizedDescription)
+            configureActivityIndicator(enabled: false)
             return
         }
         
-        for photo in photoResult!.photo {
+        guard let photos = photoResult?.photo else {
+            return
+        }
+        
+        for photo in photos {
+            let photoDB = savePhoto(response: photo)
             VRTClient.downloadPhotoImage(server: photo.server, id: photo.id, size: "w", secret: photo.secret) { data, error in
-                self.savePhoto(response: photo, data: data!)
+                self.savePhotoData(photo: photoDB, data: data)
             }
         }
         fetchButton.isEnabled = !(photoResult?.photo.isEmpty ?? true)
@@ -132,13 +134,20 @@ class PhotoAlbumViewController: UIViewController {
     }
     
     // MARK: - Core Data Methods
-    private func savePhoto(response: PhotoEntity, data: Data) {
+    @discardableResult
+    private func savePhoto(response: PhotoEntity) -> Photo {
         let photo = Photo(context: dataController.viewContext)
         photo.id = response.id
-        photo.image = data
         photo.pin = pin
         try? dataController.viewContext.save()
+        return photo
     }
+    
+    private func savePhotoData(photo: Photo, data: Data?) {
+        photo.image = data
+        try? dataController.viewContext.save()
+    }
+    
     
     func deletePhoto(at indexPath: IndexPath) {
         let photoToDelete = fetchedResultsController?.object(at: indexPath)
