@@ -7,32 +7,32 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "2BD01BFD-1F30-4A9F-91A2-5EBB62F7A8F8"
+            uuid = "08E6F836-5CD8-4874-B102-1D1934F0C5F7"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "VirtualTourist/Controllers/PhotoAlbumViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "158"
-            endingLineNumber = "158"
-            landmarkName = "fetchBtnPressed(_:)"
+            startingLineNumber = "172"
+            endingLineNumber = "172"
+            landmarkName = "collectionView(_:cellForItemAt:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "5417B02A-9865-4FF3-8ADD-6E0199875653"
+            uuid = "F73843A8-C291-4B5D-B085-E88F75AB10FD"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "VirtualTourist/Controllers/TravelLocationViewController.swift"
+            filePath = "VirtualTourist/Controllers/PhotoAlbumViewController.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "134"
-            endingLineNumber = "134"
-            landmarkName = "mapView(_:didSelect:)"
+            startingLineNumber = "126"
+            endingLineNumber = "126"
+            landmarkName = "handleRemotePhoto(photoResult:error:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

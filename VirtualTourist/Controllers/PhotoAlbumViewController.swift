@@ -108,20 +108,21 @@ class PhotoAlbumViewController: UIViewController {
     
     private func configureActivityIndicator(enabled: Bool) {
         mapView.isUserInteractionEnabled = !enabled
-        if enabled {
-            activityIndicator.startAnimating()
-        } else {
-            activityIndicator.stopAnimating()
-        }
+        enabled ? activityIndicator.startAnimating() : activityIndicator.stopAnimating()
     }
     
     private func handleRemotePhoto(photoResult: PhotoResult?, error: Error?) {
         if let error = error {
             showErrorAlert(message: error.localizedDescription)
+            configureActivityIndicator(enabled: false)
             return
         }
         
-        for photo in photoResult!.photo {
+        guard let photos = photoResult?.photo else {
+            return
+        }
+        
+        for photo in photos {
             VRTClient.downloadPhotoImage(server: photo.server, id: photo.id, size: "w", secret: photo.secret) { data, error in
                 self.savePhoto(response: photo, data: data!)
             }
@@ -132,7 +133,7 @@ class PhotoAlbumViewController: UIViewController {
     }
     
     // MARK: - Core Data Methods
-    private func savePhoto(response: PhotoEntity, data: Data) {
+    private func savePhoto(response: PhotoEntity, data: Data?) {
         let photo = Photo(context: dataController.viewContext)
         photo.id = response.id
         photo.image = data

@@ -12,6 +12,8 @@ extension UIViewController {
     func showErrorAlert(message: String) {
         let alertVC = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
         alertVC.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-        present(alertVC, animated: true, completion: nil)
+        DispatchQueue.main.async {
+            self.present(alertVC, animated: true, completion: nil)
+        }
     }
 }
